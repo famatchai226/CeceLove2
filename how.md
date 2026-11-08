@@ -3,11 +3,10 @@
 Landing page de vente du film **CeceLove 2** — édition **adulte (+18)**, **3 500 FCFA**
 (prix barré 25 000 FCFA).
 
-> ⚠️ **État actuel : aucun média livré.** Le carrousel du hero et la bande-annonce
-> n'affichent que des **slots vides** propres (dégradé de secours + bloc
-> « Bande-annonce — à venir »). Rien n'est cassé, rien ne renvoie de 404 : les `<img>`
-> et le `<video>` sont volontairement **commentés** dans `index.html` en attendant les
-> fichiers. Voir la checklist ci-dessous.
+> ✅ **Médias livrés et branchés.** 7 visuels dans `assets/hero caroussel/` (carrousel
+> actif) et la bande-annonce `assets/trailer.mp4` (143 s, 1280 × 720, faststart, 22 Mo)
+> servie par `raw.githubusercontent.com`, avec le fichier local en secours. Les 4 boutons
+> d'achat pointent sur le **checkout MyMaketou réel** de CeceLove 2.
 
 ## Structure du projet
 
@@ -19,40 +18,41 @@ cecelove2-landing-page/
 │   ├── fr.json     ← Traductions françaises (source de vérité)
 │   └── en.json     ← Traductions anglaises
 ├── assets/
-│   ├── hero caroussel/  ← VIDE : 0.png … 7.png à déposer
-│   └── (trailer.mp4)    ← à déposer
+│   ├── hero caroussel/  ← 7 visuels : 0.png, 1.jpg, 2.jpg, 3.jpg, 4.jpg, 5.jpg, 6.png
+│   ├── trailer.mp4      ← bande-annonce (143 s, 1280 × 720, faststart, 22 Mo)
+│   └── README.md        ← spécifications des médias
 ├── _tools/         ← scripts de contrôle (dev)
 ├── .gitignore
 ├── README.md
 └── how.md          ← Ce fichier
 ```
 
-## ✅ À faire avant la mise en ligne
+## ✅ État de la livraison
 
 | # | Élément | Où | État |
 |---|---|---|---|
-| 1 | **Lien de checkout MyMaketou** de CeceLove 2 | 4 `href` d'`index.html` (`nav.cta`, `hero.cta`, `cta_section.btn`, `float_bar.btn`) + `CHECKOUT_URL` dans `_tools/check-links.js` et `prod-check.js` | ⏳ provisoire (`.../products/cecelove-2-a-definir/checkout`) |
-| 2 | **8 visuels du hero** (`0.png` … `7.png`) | `assets/hero caroussel/` | ⏳ emplacement vide |
-| 3 | **Bande-annonce** `trailer.mp4` (H.264, faststart) | `assets/trailer.mp4` | ⏳ emplacement vide |
-| 4 | **Nom du dépôt GitHub** (pour le CDN jsDelivr) | `CeceLove2` (cible CDN déjà écrite dans les commentaires) | ⏳ à confirmer |
+| 1 | **Lien de checkout MyMaketou** de CeceLove 2 | 4 `href` d'`index.html` (`nav.cta`, `hero.cta`, `cta_section.btn`, `float_bar.btn`) + `CHECKOUT_URL` dans `_tools/check-links.js` et `prod-check.js` | ✅ `https://baltazar.mymaketou.shop/products/meilleur-film-mature/checkout` |
+| 2 | **Visuels du hero** (7 fichiers) | `assets/hero caroussel/` | ✅ `0.png`, `1.jpg` … `5.jpg`, `6.png` |
+| 3 | **Bande-annonce** `trailer.mp4` | `assets/trailer.mp4` | ✅ 143 s, 1280 × 720, faststart, 22 Mo |
+| 4 | **Dépôt GitHub public** qui sert le mp4 (source du CDN) | `famatchai226/CeceLove2` | ⏳ à créer puis pousser (le 1er `<source>` est déjà écrit) |
 
-Une fois les fichiers reçus :
+Il ne reste donc que des étapes de **déploiement** :
 
-1. déposez-les dans `assets/` ;
-2. décommentez le bloc `<img>` du carrousel (`<!-- SLOT VISUELS (1 à 8)`) et le bloc
-   `<video>` (`<!-- SLOT BANDE-ANNONCE`) dans `index.html` ;
-3. mettez l'URL CDN dans les **3** endroits qui doivent rester identiques :
-   `<source>` d'`index.html`, `trailer.src` de `locales/fr.json` et `locales/en.json` ;
-4. relancez `node _tools/check-links.js` — il doit passer de 6 WARN à 0 WARN.
+1. créez le dépôt public `famatchai226/CeceLove2` et poussez-y `assets/trailer.mp4` — sans lui,
+   le 1er `<source>` répond 404 et le navigateur bascule sur le fichier local (plus de `Range`,
+   donc plus de déplacement dans la vidéo) ;
+2. déployez la page sur Cloudflare Pages (`cecelove2.famatchai226.workers.dev`) ;
+3. relancez les contrôles : `check-links.js` (0 FAIL / 0 WARN attendu), `i18n-audit.js`,
+   puis `prod-check.js` une fois l'URL en ligne.
 
 ## Structure de la page (dans l'ordre)
 
 | # | Section | Clés i18n | Rôle |
 |---|---|---|---|
 | 1 | bandeau défilant `.marquee` | `marquee.text` | rappel « 18+ · explicite · aucune censure » |
-| 2 | hero `#top` | `hero.*` | accroche, CTA, carrousel de visuels (slot vide) |
+| 2 | hero `#top` | `hero.*` | accroche, CTA, carrousel de 7 visuels |
 | 3 | bandeau chiffres `.stats` | `stats.*` | HD, accès à vie, privé, 3 500 FCFA |
-| 4 | bande-annonce `.trailer` | `trailer.*` | lecteur (slot tant que le mp4 manque) |
+| 4 | bande-annonce `.trailer` | `trailer.*` | lecteur du trailer (CDN + secours local) |
 | 5 | synopsis | `synopsis.*` | l'histoire + citation |
 | 6 | scènes `#scenes` | `scenes.*`, `heat.*` | 6 scènes décrites + jauge d'intensité |
 | 7 | offre `#offre` | `offer.*` | contenu de l'achat + prix barré 25 000 |
@@ -82,9 +82,9 @@ Une fois les fichiers reçus :
   document sont équilibrées et que les `id` sont uniques.
 
 ## Liens sortants
-- **Boutons d'achat** (nav, hero, `#acheter`, float-bar) → **checkout MyMaketou de CeceLove 2**.
-  ⏳ Placeholder actuel, à remplacer sur les **4** boutons simultanément (ils doivent rester
-  identiques). Un rappel `<!-- TODO-CHECKOUT -->` est déjà présent dans le nav.
+- **Boutons d'achat** (nav, hero, `#acheter`, float-bar) → **checkout MyMaketou de CeceLove 2** :
+  ✅ `https://baltazar.mymaketou.shop/products/meilleur-film-mature/checkout` — les **4** boutons
+  doivent rester identiques (`check-links.js` et `prod-check.js` échouent sinon).
 - **Boutons d'upsell** (bas de page) → **landing pages** des produits sœurs (même convention
   que `kera-`, `gotelegram-` et `boutique-landing-page`) :
 
@@ -102,20 +102,25 @@ Une fois les fichiers reçus :
   `node _tools/check-links.js` (doit finir par `RESULT: ALL CHECKS PASSED`).
 
 ## Médias
-- **Hero** : carrousel automatique des 8 visuels `assets/hero caroussel/0.png` … `7.png`
-  (rotation toutes les 3,8 s, points de navigation cliquables, pause au survol).
-  Tant que les images manquent, le dégradé `.poster-fallback` s'affiche et les points
-  de navigation se masquent automatiquement (`slides.length < 2`).
-- **Bande-annonce** : `assets/trailer.mp4` (MP4 / H.264, faststart), utilisée en FR **et** en EN.
-  Tant qu'elle manque, le bloc `.video-slot` (« Bande-annonce — à venir ») la remplace et
-  `trailer.src` reste **vide** dans les deux locales (sinon `i18n.js` pointerait le
-  `<video>` vers la page elle-même).
+- **Hero** : carrousel automatique des **7 visuels** de `assets/hero caroussel/` — `0.png`,
+  `1.jpg`, `2.jpg`, `3.jpg`, `4.jpg`, `5.jpg`, `6.png` (rotation toutes les 3,8 s, points de
+  navigation cliquables, pause au survol). Le dégradé `.poster-fallback` ne sert plus que de
+  secours si aucune image ne se charge.
+- **Bande-annonce** : `assets/trailer.mp4` — 143 s, 1280 × 720, H.264 / AAC, **faststart**
+  (`moov` avant `mdat`, obtenu avec `_tools/mp4-faststart.js`), **22 Mo**. Deux `<source>` :
+  1. `https://raw.githubusercontent.com/famatchai226/CeceLove2/main/assets/trailer.mp4`
+     → `206` + `Accept-Ranges: bytes` : le déplacement dans la vidéo fonctionne sur mobile ;
+  2. `./assets/trailer.mp4` en secours (le Worker Cloudflare, lui, ignore `Range`).
+  `trailer.src` des deux locales doit rester **égal au 1er `<source>`** : `i18n.js` réécrit
+  le `src` de la première balise `<source>` du `<video>`.
 - Détails, formats conseillés et emplacements : `assets/README.md`.
 
 ### Ajouter / retirer un visuel du carrousel
 Dans `index.html`, section hero, bloc `<div class="poster carousel" id="heroCarousel">` :
 dupliquez une ligne `<img class="slide" src="./assets/hero%20caroussel/N.png" ... />`
-en incrémentant `N`. Les points de navigation sont générés automatiquement par le script.
+en incrémentant `N` (gardez l'extension réelle du fichier, `.png` ou `.jpg`). Les points de
+navigation sont générés automatiquement par le script, dans l'ordre des `<img>`.
+Pour retirer un visuel : supprimez simplement sa ligne `<img>`.
 
 > ⚠️ Le dossier s'écrit `hero caroussel` (un seul `r`, deux `s`) et l'espace est encodé `%20`
 > dans les URL (`hero%20caroussel`) pour rester valable sur tous les serveurs.

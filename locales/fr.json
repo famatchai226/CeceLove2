@@ -37,9 +37,7 @@
     "label": "Bande-annonce",
     "title": "Un aperçu de <em>CeceLove 2</em>",
     "subtitle": "Quelques secondes pour te faire une idée. Le reste, tu le verras seul.",
-    "src": "",
-    "slot_title": "Bande-annonce — à venir",
-    "slot_desc": "Le trailer de CeceLove 2 sera mis en ligne ici très bientôt.",
+    "src": "https://raw.githubusercontent.com/famatchai226/CeceLove2/main/assets/trailer.mp4",
     "note": "🔒 Lecture 100% privée et sécurisée."
   },
   "synopsis": {

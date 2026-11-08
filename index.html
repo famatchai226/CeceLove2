@@ -1585,9 +1585,9 @@
       <div class="nav-right">
         <button class="lang-toggle" type="button" data-lang="en" onclick="switchLang(this.getAttribute('data-lang'))"
           title="Switch language">EN</button>
-        <!-- TODO-CHECKOUT : remplacer par le lien de checkout MyMaketou de CeceLove 2
-             (même URL pour les 4 boutons : nav.cta, hero.cta, cta_section.btn, float_bar.btn) -->
-        <a href="https://baltazar.mymaketou.shop/products/cecelove-2-a-definir/checkout"
+        <!-- Achat : même URL de checkout MyMaketou sur les 4 boutons
+             (nav.cta, hero.cta, cta_section.btn, float_bar.btn) -->
+        <a href="https://baltazar.mymaketou.shop/products/meilleur-film-mature/checkout"
           class="btn-primary nav-cta" target="_blank" rel="noopener" data-i18n="nav.cta">🔥 Acheter — 3 500 FCFA</a>
       </div>
     </div>
@@ -1627,7 +1627,7 @@
               sans filtre, sans coupure</strong> — réservé aux adultes avertis. Lien de visionnage privé livré dans ton
             email dès le paiement.</p>
           <div class="hero-actions">
-            <a href="https://baltazar.mymaketou.shop/products/cecelove-2-a-definir/checkout" class="btn-primary"
+            <a href="https://baltazar.mymaketou.shop/products/meilleur-film-mature/checkout" class="btn-primary"
               target="_blank" rel="noopener" data-i18n="hero.cta">⚡ Regarder CeceLove 2 — 3 500 FCFA</a>
           </div>
           <p class="price-note" data-i18n="hero.price_note">Paiement unique · Accès à vie · Aucune trace publique</p>
@@ -1669,19 +1669,17 @@
               <span class="pf-mark">CeceLove 2</span>
               <span class="pf-sub" data-i18n="hero.poster_sub">Visuels à venir</span>
             </div>
-            <!-- SLOT VISUELS (1 à 8) — aucun média livré pour l'instant, la page affiche le dégradé de marque
-                 ci-dessus. Pour brancher vos visuels : déposez 0.png … 7.png dans « assets/hero caroussel/ »
-                 puis décommentez les 8 lignes suivantes (telles quelles). Le carrousel + les points de
-                 navigation se réactivent automatiquement dès qu'il y a au moins 2 images.
+            <!-- Visuels du hero : les 7 fichiers livrés dans « assets/hero caroussel/ » sont branchés
+                 ci-dessous. Le carrousel et les points de navigation s'activent dès qu'il y a au moins
+                 2 images. Pour ajouter un visuel : déposez-le dans le dossier, dupliquez une ligne
+                 de la balise img.slide et incrémentez son alt. -->
             <img class="slide is-active" src="./assets/hero%20caroussel/0.png" alt="CeceLove 2 visuel 1" />
-            <img class="slide" src="./assets/hero%20caroussel/1.png" alt="CeceLove 2 visuel 2" loading="lazy" />
-            <img class="slide" src="./assets/hero%20caroussel/2.png" alt="CeceLove 2 visuel 3" loading="lazy" />
-            <img class="slide" src="./assets/hero%20caroussel/3.png" alt="CeceLove 2 visuel 4" loading="lazy" />
-            <img class="slide" src="./assets/hero%20caroussel/4.png" alt="CeceLove 2 visuel 5" loading="lazy" />
-            <img class="slide" src="./assets/hero%20caroussel/5.png" alt="CeceLove 2 visuel 6" loading="lazy" />
+            <img class="slide" src="./assets/hero%20caroussel/1.jpg" alt="CeceLove 2 visuel 2" loading="lazy" />
+            <img class="slide" src="./assets/hero%20caroussel/2.jpg" alt="CeceLove 2 visuel 3" loading="lazy" />
+            <img class="slide" src="./assets/hero%20caroussel/3.jpg" alt="CeceLove 2 visuel 4" loading="lazy" />
+            <img class="slide" src="./assets/hero%20caroussel/4.jpg" alt="CeceLove 2 visuel 5" loading="lazy" />
+            <img class="slide" src="./assets/hero%20caroussel/5.jpg" alt="CeceLove 2 visuel 6" loading="lazy" />
             <img class="slide" src="./assets/hero%20caroussel/6.png" alt="CeceLove 2 visuel 7" loading="lazy" />
-            <img class="slide" src="./assets/hero%20caroussel/7.png" alt="CeceLove 2 visuel 8" loading="lazy" />
-            -->
             <span class="poster-tag">18+</span>
             <div class="slide-dots" id="slideDots" aria-label="Choisir un aperçu"></div>
           </div>
@@ -1723,27 +1721,19 @@
         <p class="body-md" style="margin-top:0.8rem;" data-i18n="trailer.subtitle">Plongez dans l'ambiance du film
           avant de le regarder en intégralité.</p>
       </div>
-      <!-- SLOT BANDE-ANNONCE — aucun mp4 livré pour l'instant : le placeholder ci-dessous s'affiche.
-           Pour brancher le trailer :
-             1. déposez assets/trailer.mp4 (H.264/AAC, moov en tête → node _tools/mp4-faststart.js, ≤ 20 Mo)
-             2. poussez le dépôt public CeceLove2 puis reportez l'URL jsDelivr ci-dessous
-             3. renseignez "trailer.src" dans locales/fr.json + locales/en.json (même URL)
-             4. décommentez le bloc <div class="video-wrap"> … </div> et supprimez le placeholder
-           Le CDN est obligatoire : Cloudflare Workers ignore les requêtes HTTP Range (200 au lieu de 206),
-           donc la vidéo ne serait pas déplaçable sur mobile en lecture directe depuis le Worker.
+      <!-- Bande-annonce : le 1er <source> est le CDN (raw.githubusercontent.com) qui répond aux
+           requêtes Range (206) et accepte les fichiers de plus de 20 Mo ; le 2e <source> est le
+           fichier local, en secours. Le Worker Cloudflare, lui, ignore Range : la vidéo ne serait
+           pas déplaçable sur mobile. Le mp4 est en faststart (moov avant mdat) : la lecture démarre
+           sans attendre le téléchargement complet. Si le fichier repasse sous 20 Mo, jsDelivr peut
+           remplacer le CDN brut (meilleur mime video/mp4) :
+           https://cdn.jsdelivr.net/gh/famatchai226/CeceLove2@main/assets/trailer.mp4 -->
       <div class="video-wrap">
-        <video controls playsinline preload="metadata" data-i18n-video="trailer.src" poster="./assets/hero%20caroussel/0.png">
-          <source src="https://cdn.jsdelivr.net/gh/famatchai226/CeceLove2@main/assets/trailer.mp4" type="video/mp4" />
+        <video controls playsinline preload="metadata" data-i18n-video="trailer.src"
+          poster="./assets/hero%20caroussel/0.png">
+          <source src="https://raw.githubusercontent.com/famatchai226/CeceLove2/main/assets/trailer.mp4" type="video/mp4" />
           <source src="./assets/trailer.mp4" type="video/mp4" />
         </video>
-      </div>
-      -->
-      <div class="video-wrap video-slot">
-        <div class="vs-inner">
-          <span class="vs-icon" aria-hidden="true">🎬</span>
-          <strong data-i18n="trailer.slot_title">Bande-annonce — à venir</strong>
-          <span data-i18n="trailer.slot_desc">Le trailer de CeceLove 2 sera mis en ligne ici très bientôt.</span>
-        </div>
       </div>
       <p class="video-note" data-i18n="trailer.note">🔒 Lecture 100% privée et sécurisée.</p>
     </div>
@@ -2301,7 +2291,7 @@
         <h2 class="display-sm" data-i18n-html="cta_section.title">Prêt à tout voir ?<br /><em>CeceLove 2</em> t'attend
         </h2>
         <p class="cta-sub" data-i18n="cta_section.subtitle">Accès instantané · Paiement sécurisé · 100% Discret</p>
-        <a href="https://baltazar.mymaketou.shop/products/cecelove-2-a-definir/checkout" class="btn-primary"
+        <a href="https://baltazar.mymaketou.shop/products/meilleur-film-mature/checkout" class="btn-primary"
           style="font-size:1.1rem;padding:1.15rem 2.4rem;" target="_blank" rel="noopener" data-i18n="cta_section.btn">🛒
           Acheter Maintenant — 3 500 FCFA</a>
         <div class="urgency">
@@ -2379,7 +2369,7 @@
   <div class="float-bar" id="floatBar">
     <span class="float-bar-text" data-i18n-html="float_bar.text">🔥 CeceLove 2 : <strong>3 500 FCFA</strong> au lieu de
       25 000 FCFA</span>
-    <a href="https://baltazar.mymaketou.shop/products/cecelove-2-a-definir/checkout" class="btn-primary"
+    <a href="https://baltazar.mymaketou.shop/products/meilleur-film-mature/checkout" class="btn-primary"
       style="font-size:0.85rem;padding:0.65rem 1.4rem;" target="_blank" rel="noopener" data-i18n="float_bar.btn">J'achète
       🛒</a>
   </div>

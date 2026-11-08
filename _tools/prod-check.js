@@ -12,10 +12,10 @@
 */
 const BASE = (process.argv[2] || 'https://cecelove2.famatchai226.workers.dev/').replace(/\/?$/, '/');
 
-/* Checkout provisoire tant que le lien MyMaketou de CeceLove 2 n'est pas fourni -> WARN.
-   Le passer a false (et mettre la vraie URL) une fois le lien recu. */
-const CHECKOUT_PENDING = true;
-const CHECKOUT = 'https://baltazar.mymaketou.shop/products/cecelove-2-a-definir/checkout';
+/* Liens sortants attendus en ligne : landing pages soeurs + checkout MyMaketou reel de
+   CeceLove 2 (fourni). CHECKOUT_PENDING reste a false : un ecart est desormais bloquant. */
+const CHECKOUT_PENDING = false;
+const CHECKOUT = 'https://baltazar.mymaketou.shop/products/meilleur-film-mature/checkout';
 const LANDING = {
   'upsell.shop_btn': 'https://boutique-landing-page.famatchai226.workers.dev/',
   'upsell.cece_btn': 'https://cecelove.famatchai226.workers.dev/',
@@ -78,8 +78,13 @@ const ww = msg => { warn++; console.log('WARN  ' + msg); };
     const firstSize = buf.readUInt32BE(0);
     const atom1 = buf.toString('ascii', 4, 8);
     const atom2 = buf.toString('ascii', firstSize + 4, firstSize + 8);
+    /* raw.githubusercontent.com repond application/octet-stream : le type est alors impose par
+       l'attribut type="video/mp4" de la balise <source>, la lecture n'est pas affectee. */
     if (type && type.includes('video/mp4')) pass('  content-type = ' + type);
-    else (critical ? ko : ww)('  content-type = ' + type + ' (attendu video/mp4)');
+    else if (critical && type && type.includes('octet-stream'))
+      pass('  content-type = ' + type + ' (type force par <source type="video/mp4">)');
+    else if (critical) ko('  content-type = ' + type + ' (attendu video/mp4 ou octet-stream)');
+    else ww('  content-type = ' + type + ' (attendu video/mp4)');
     if (atom2 === 'moov') pass('  atomes : ' + atom1 + ' puis ' + atom2 + ' -> faststart OK');
     else (critical ? ko : ww)('  atomes : ' + atom1 + ' puis ' + atom2 + ' -> PAS faststart');
     if (rangeOk && acceptRanges && acceptRanges.includes('bytes')) {

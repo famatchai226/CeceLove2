@@ -7,18 +7,20 @@ avant mise en ligne.
 > Les commandes ci-dessous se lancent **depuis le dossier `cecelove2-landing-page`** :
 > `cd "c:\Users\hp\Antigravity& Stitch\cecelove2-landing-page"`
 
-## Résultats attendus aujourd'hui (page livrée sans média)
+## Résultats attendus aujourd'hui (médias + checkout livrés)
 
 | Script | Résultat attendu |
 |---|---|
 | `serve.js --check` | `RESULT: page et fichiers critiques OK` |
-| `check-links.js` | `RESULT: ALL CHECKS PASSED (6 WARN — éléments en attente)` |
+| `check-links.js` | `RESULT: ALL CHECKS PASSED` (0 FAIL / 0 WARN) |
 | `i18n-audit.js` | `RESULT: ALL CHECKS PASSED` |
-| `prod-check.js` | page `200` ; 4 WARN « checkout provisoire » ; 1 WARN « slot vidéo » |
-| `seek-test-cecelove2.js` | `assets/trailer.mp4 absent : slot video actif` (code 0, rien à tester) |
-| `mobile-seek-live.js` | signale « bande-annonce absente (HTTP 404) » tant que le mp4 n'est pas livré |
+| `prod-check.js` | après déploiement : page `200`, 7 CTA corrects, `Range` sur la source CDN |
+| `seek-test-cecelove2.js` | 5 seeks + 1 seek pendant la lecture, tous OK (mp4 local) |
+| `mobile-seek-live.js` | `seekable` non vide dès que le mp4 est servi par le CDN |
 
-Les WARN disparaissent d'eux-mêmes dès que le checkout réel + les médias sont en place.
+> Tant que le dépôt `famatchai226/CeceLove2` n'existe pas, le 1er `<source>` du trailer
+> répond 404 : la page reste lisible (repli local) mais `mobile-seek-live.js` signalera
+> l'absence de `Range` sur ce repli.
 
 ## 1. `serve.js` — prévisualisation locale (et test de fumée)
 Serveur statique minimal (support `Range`) : indispensable car les textes sont chargés par
@@ -36,17 +38,19 @@ Liste tous les CTA externes d'`index.html` (clé i18n → URL) et vérifie :
   la boutique complète (`boutique-landing-page.famatchai226.workers.dev`), CeceLove 1
   (`cecelove.famatchai226.workers.dev`) et Baltazar (`balta.famatchai226.workers.dev`) —
   croisées avec la source de vérité `../boutique-landing-page/how.md` ;
-- les **4 boutons d'achat** → checkout MyMaketou (`CHECKOUT_PENDING = true` : WARN, pas FAIL,
-  tant que le lien réel de CeceLove 2 n'est pas fourni) + présence du rappel `TODO-CHECKOUT` ;
+- les **4 boutons d'achat** → checkout MyMaketou réel de CeceLove 2
+  (`.../products/meilleur-film-mature/checkout` ; `CHECKOUT_PENDING = false`, tout écart est un
+  FAIL) et l'absence de l'ancien placeholder `cecelove-2-a-definir` / du rappel `TODO-CHECKOUT` ;
 - le **prix** : `3 500 FCFA` (EN : `3,500 FCFA`) dans `nav.cta`, `hero.cta`,
   `cta_section.btn`, `float_bar.text` ; `25 000 FCFA` conservé comme prix barré ;
   aucun reste de l'ancien tarif ;
 - la **couverture i18n** : chaque `data-i18n*` d'`index.html` existe dans `fr.json` **et**
   `en.json`, et les deux fichiers ont exactement la même structure (parité des clés) ;
-- les **médias** : visuels réellement référencés présents (les blocs commentés ne comptent
-  pas) ou WARN « slot en attente » ; si `assets/trailer.mp4` existe, contrôle faststart +
-  taille < 20 Mo + `trailer.src` identique dans les deux locales ; sinon vérifie que
-  `trailer.src` reste vide et que le placeholder `.video-slot` est affiché.
+- les **médias** : chaque visuel référencé existe sur le disque (les blocs commentés ne
+  comptent pas) ; si `assets/trailer.mp4` existe, contrôle **faststart** (2e atome = `moov`),
+  taille ≤ 100 Mo (limite GitHub par fichier) et `trailer.src` identique dans les deux locales
+  et égal au 1er `<source>` ; sinon vérifie que `trailer.src` reste vide et que le placeholder
+  `.video-slot` est affiché.
 
 ```powershell
 node _tools/check-links.js      # code 1 s'il reste au moins un FAIL
@@ -56,7 +60,9 @@ node _tools/check-links.js      # code 1 s'il reste au moins un FAIL
 Interroge l'URL déployée (par défaut `https://cecelove2.famatchai226.workers.dev/`) et vérifie :
 1. la page répond `200` ;
 2. les 7 CTA de la version en ligne pointent sur les bonnes cibles
-   (upsell → landing pages sœurs, achat → checkout ; WARN si `CHECKOUT_PENDING`) ;
+   (upsell → landing pages sœurs, achat → checkout) ; sur la source principale, un
+   `content-type: application/octet-stream` est accepté (le type est alors forcé par
+   l'attribut `type="video/mp4"` de la balise `<source>`) ;
 3. chaque balise `<source>` de la bande-annonce (CDN principal + secours local) est testée :
    type MIME, **faststart**, et support des requêtes **`Range`** (`206` + `Accept-Ranges: bytes`),
    condition indispensable pour se déplacer dans la vidéo pendant la lecture. Tant que le
@@ -76,13 +82,14 @@ gate au doigt, vidéo ramenée dans le viewport (Chrome **ne bufferise pas** un 
 ```powershell
 node _tools/mobile-seek-live.js
 node _tools/mobile-seek-live.js --url=https://cecelove2.famatchai226.workers.dev/
-node _tools/mobile-seek-live.js --alt=https://cdn.jsdelivr.net/gh/famatchai226/CeceLove2@main/assets/trailer.mp4
+node _tools/mobile-seek-live.js --alt=https://raw.githubusercontent.com/famatchai226/CeceLove2/main/assets/trailer.mp4
 ```
 
 > 📌 Mesure historique (autre page, avant correctif) : `seekable = [[0, 0]]` et tous les
 > seeks retombaient à 0,11 s, même avec `buffered = [[0, 98.84]]` → `preload="auto"` ne
 > répare rien : seul un hébergeur qui répond `206` débloque le seek. C'est pourquoi le mp4
-> devra être servi par le CDN jsDelivr et non par le Worker Cloudflare (cf. `assets/README.md`).
+> est servi par `raw.githubusercontent.com` (206) et non par le Worker Cloudflare
+> (cf. `assets/README.md`).
 
 ## 5. `seek-test-cecelove2.js` — test navigateur réel (bout en bout)
 Monte un serveur statique local (avec support `Range` et **débit limité**), pilote Chrome

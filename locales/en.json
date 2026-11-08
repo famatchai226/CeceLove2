@@ -37,9 +37,7 @@
     "label": "Trailer",
     "title": "A glimpse of <em>CeceLove 2</em>",
     "subtitle": "A few seconds to make up your mind. The rest, you will watch alone.",
-    "src": "",
-    "slot_title": "Trailer — coming soon",
-    "slot_desc": "The CeceLove 2 trailer will be online here very soon.",
+    "src": "https://raw.githubusercontent.com/famatchai226/CeceLove2/main/assets/trailer.mp4",
     "note": "🔒 100% private and secure playback."
   },
   "synopsis": {

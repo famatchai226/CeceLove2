@@ -28,13 +28,16 @@ for (const lang of ['fr', 'en']) {
   locales[lang] = JSON.parse(fs.readFileSync(path.join(ROOT, 'locales', lang + '.json'), 'utf8'));
 }
 
-/* La bande-annonce devra être servie par un CDN qui gère les requêtes HTTP Range : sans Range,
+/* La bande-annonce doit être servie par un host qui gère les requêtes HTTP Range : sans Range,
    `video.seekable` reste [[0, 0]] et avancer/reculer devient impossible sur mobile
    (les Workers Cloudflare répondent 200 au lieu de 206 sur un Range).
-   Le mp4 devra donc rester dans un dépôt public (source du CDN) et le fichier local en secours. */
-const TRAILER_CDN = 'https://cdn.jsdelivr.net/gh/famatchai226/CeceLove2@main/assets/trailer.mp4';
+   Source principale retenue : raw.githubusercontent.com (206 + Accept-Ranges, fichiers <= 100 Mo).
+   jsDelivr plafonne à 20 Mo par fichier : il refuse le trailer livré (22 Mo), il ne pourra être
+   réutilisé que si le mp4 repasse sous cette limite (son mime video/mp4 est plus propre).
+   Le fichier local reste en 2e <source>, en secours. */
+const TRAILER_CDN = 'https://raw.githubusercontent.com/famatchai226/CeceLove2/main/assets/trailer.mp4';
 const TRAILER_LOCAL = './assets/trailer.mp4';
-const TRAILER_CDN_MAX = 20 * 1024 * 1024; /* limite jsDelivr pour un fichier @gh */
+const TRAILER_CDN_MAX = 100 * 1024 * 1024; /* limite GitHub par fichier (jsDelivr : 20 Mo) */
 const MP4_PATH = path.join(ROOT, 'assets', 'trailer.mp4');
 const HAS_MEDIA = fs.existsSync(MP4_PATH);
 
@@ -51,11 +54,11 @@ const LANDING = {
   'upsell.cece_btn': 'https://cecelove.famatchai226.workers.dev/',
   'upsell.balta_btn': 'https://balta.famatchai226.workers.dev/'
 };
-/* Le lien de checkout MyMaketou de CeceLove 2 n'a pas encore été fourni : la valeur ci-dessous
-   est un placeholder. Tant que CHECKOUT_PENDING est true, l'écart est signalé en WARN (non bloquant).
-   Dès réception du vrai lien : remplacer CHECKOUT_URL ici + les 4 href de index.html, puis false. */
-const CHECKOUT_PENDING = true;
-const CHECKOUT_URL = 'https://baltazar.mymaketou.shop/products/cecelove-2-a-definir/checkout';
+/* Lien de checkout MyMaketou réel de CeceLove 2 (fourni) : les 4 boutons d'achat doivent pointer
+   exactement dessus. En cas de changement de produit : mettre à jour CHECKOUT_URL ici + les 4 href
+   de index.html (nav.cta, hero.cta, cta_section.btn, float_bar.btn). */
+const CHECKOUT_PENDING = false;
+const CHECKOUT_URL = 'https://baltazar.mymaketou.shop/products/meilleur-film-mature/checkout';
 const CHECKOUT = ['nav.cta', 'hero.cta', 'cta_section.btn', 'float_bar.btn'];
 const PRICE_FR = '3 500 FCFA';
 const PRICE_EN = '3,500 FCFA';
@@ -88,7 +91,8 @@ for (const key of CHECKOUT) {
     ck(false, key + ' -> ' + show(key) + '  (attendu : ' + CHECKOUT_URL + ')');
   }
 }
-ck(html.includes('TODO-CHECKOUT'), 'index.html : rappel TODO-CHECKOUT présent dans le nav');
+ck(!html.includes('TODO-CHECKOUT'), 'index.html : plus aucun rappel TODO-CHECKOUT (lien réel branché)');
+ck(!html.includes('cecelove-2-a-definir'), 'index.html : plus aucune URL de checkout provisoire');
 
 console.log('');
 console.log('--- source de vérité : boutique-landing-page/how.md ---');
@@ -121,7 +125,9 @@ for (const lang of ['fr', 'en']) {
   ck(!/1[ ,]500 FCFA/.test(raw), lang + '.json : aucun reste de l\'ancien tarif 1 500 FCFA');
   /* la carte « CeceLove 1 » de l'upsell cite forcément l'autre volet : le contrôle de marque
      porte donc sur tout le reste de la page (bloc upsell exclu). */
-  const rawNoUpsell = JSON.stringify({ ...json, upsell: undefined });
+  /* les URLs ne sont pas de la copie : trailer.src pointe sur …/CeceLove2/… (dépôt GitHub),
+     on l'écarte du balayage en même temps que le bloc upsell. */
+  const rawNoUpsell = JSON.stringify({ ...json, upsell: undefined, trailer: { ...json.trailer, src: undefined } });
   ck(/CeceLove 2/.test(rawNoUpsell) && !/CeceLove(?! 2)/.test(rawNoUpsell),
     lang + '.json : la marque est bien « CeceLove 2 » partout (hors upsell)');
   ck(!!(json.upsell && json.upsell.shop_btn && json.upsell.cece_btn && json.upsell.balta_btn),
@@ -154,7 +160,7 @@ console.log('');
 console.log('--- visuels référencés dans index.html ---');
 const refs = [...new Set([...htmlLive.matchAll(/(?:src|poster)="\.\/(assets\/[^"]+)"/g)].map(m => decodeURIComponent(m[1])))];
 if (!refs.length) {
-  warn('aucun visuel actif : les 8 <img> du carrousel sont commentés (slots vides)');
+  warn('aucun visuel référencé : le dégradé de marque s\'affiche à la place du carrousel');
 } else {
   for (const ref of refs) {
     if (fs.existsSync(path.join(ROOT, ref))) ck(true, ref + ' présent');
@@ -170,8 +176,8 @@ if (HAS_MEDIA) {
   ck(secondBox === 'moov', 'trailer.mp4 : second atome = ' + secondBox + ' (faststart)');
   ck(html.includes('src="' + TRAILER_CDN + '"'), 'index.html : 1er <source> = CDN qui gère Range');
   ck(html.includes('src="' + TRAILER_LOCAL + '"'), 'index.html : 2e <source> = secours ' + TRAILER_LOCAL);
-  ck(mp4.length < TRAILER_CDN_MAX, 'trailer.mp4 = ' + (mp4.length / 1048576).toFixed(1)
-    + ' Mo (< 20 Mo, limite du CDN jsDelivr)');
+  ck(mp4.length <= TRAILER_CDN_MAX, 'trailer.mp4 = ' + (mp4.length / 1048576).toFixed(1)
+    + ' Mo (<= 100 Mo, limite GitHub par fichier)');
   for (const lang of ['fr', 'en']) {
     ck(locales[lang].trailer.src === TRAILER_CDN, lang + '.json trailer.src = ' + locales[lang].trailer.src);
   }
