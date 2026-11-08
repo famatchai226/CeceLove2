@@ -51,6 +51,10 @@ Liste tous les CTA externes d'`index.html` (clé i18n → URL) et vérifie :
   taille ≤ 100 Mo (limite GitHub par fichier) et `trailer.src` identique dans les deux locales
   et égal au 1er `<source>` ; sinon vérifie que `trailer.src` reste vide et que le placeholder
   `.video-slot` est affiché.
+- les **visuels des cartes d'upsell** : **6 `<img>`** au total (mosaïque 2 × 2 pour la carte
+  « boutique complète » + 1 pour chacune des deux autres), tous en **URL absolue**
+  (Worker du produit), avec
+  `alt` et `loading="lazy"` ;
 
 ```powershell
 node _tools/check-links.js      # code 1 s'il reste au moins un FAIL
@@ -67,6 +71,8 @@ Interroge l'URL déployée (par défaut `https://cecelove2.famatchai226.workers.
    type MIME, **faststart**, et support des requêtes **`Range`** (`206` + `Accept-Ranges: bytes`),
    condition indispensable pour se déplacer dans la vidéo pendant la lecture. Tant que le
    bloc vidéo est un simple slot, la section sort en WARN (pas en FAIL).
+4. les **visuels de l'upsell** répondent en ligne (`200`/`206`) avec un `content-type: image/*` :
+   une vignette cassée sur un Worker frère se voit immédiatement.
 
 ```powershell
 node _tools/prod-check.js

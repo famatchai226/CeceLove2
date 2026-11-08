@@ -81,6 +81,23 @@ const upsellCards = [...html.matchAll(/<div class="upsell-card">([\s\S]*?)<\/div
 ck(upsellCards.length === 3, 'index.html : ' + upsellCards.length + ' carte(s) d\'upsell (exactement 3 attendues)');
 ck(!/upsell\.bd_/.test(html), 'index.html : plus aucune carte BD dans l\'upsell');
 
+/* Chaque carte d'upsell porte le visuel du produit, publié par le Worker de ce produit
+   (URL absolue : rien à embarquer dans ce dossier). La carte « boutique complète » affiche
+   une mosaïque 2 x 2 des couvertures du catalogue de la boutique. */
+console.log('');
+console.log('--- visuels des cartes d\'upsell ---');
+const gridStart = htmlLive.indexOf('<div class="upsell-grid">');
+const gridEnd = htmlLive.indexOf('</section>', gridStart);
+const upsellBlock = gridStart >= 0 && gridEnd > gridStart ? htmlLive.slice(gridStart, gridEnd) : '';
+const upsellImgs = [...upsellBlock.matchAll(/<img[^>]*>/g)].map(m => m[0]);
+ck(upsellImgs.length === 6, 'index.html : ' + upsellImgs.length
+  + ' visuel(s) dans les cartes (6 attendus : mosaïque 4 + 1 + 1)');
+ck(upsellImgs.every(t => /\ssrc="https:\/\/[^"]+"/.test(t)),
+  'visuels servis en URL absolue (aucun fichier à embarquer)');
+ck(upsellImgs.every(t => /\salt="[^"]+"/.test(t)), 'visuels avec un texte alternatif');
+ck(upsellImgs.every(t => /\sloading="lazy"/.test(t)), 'visuels en chargement différé (loading="lazy")');
+for (const t of upsellImgs) console.log('  ' + (t.match(/src="([^"]+)"/) || [null, '?'])[1]);
+
 console.log('');
 console.log('--- boutons d\'achat : checkout CeceLove 2 ---');
 for (const key of CHECKOUT) {

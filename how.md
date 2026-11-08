@@ -63,7 +63,7 @@ Il ne reste donc que des étapes de **déploiement** :
 | 12 | discrétion | `discretion.*` | 6 garanties de confidentialité |
 | 13 | FAQ | `faq.*` | 10 questions |
 | 14 | CTA `#acheter` | `cta_section.*` | achat + compte à rebours jusqu'à minuit |
-| 15 | upsell | `upsell.*` | landing pages des produits sœurs |
+| 15 | upsell | `upsell.*` | 3 cartes avec visuel → landing pages des produits sœurs |
 | 16 | footer | `footer.*` | contact + mention +18 |
 
 > Le compte à rebours est une **horloge réelle** (minuit, heure locale du visiteur) : pas de
@@ -97,6 +97,20 @@ Il ne reste donc que des étapes de **déploiement** :
   > 📌 **Règle produit : exactement 3 cartes d'upsell** — la boutique complète, CeceLove
   > (l'autre volet) et Baltazar. Les autres pages produits ne sont plus proposées ici.
   > `check-links.js` compte les cartes et échoue s'il y en a plus ou moins.
+
+  Chaque carte porte le **visuel du produit**, servi en **URL absolue** par le Worker du
+  produit (aucun fichier à embarquer dans ce dossier) :
+
+  | Carte | Visuel |
+  |---|---|
+  | La boutique complète | mosaïque 2 × 2 des couvertures de `boutique-landing-page/assets/products/` : `kera.jpg`, `bd.jpg`, `secrets369.jpg`, `gotelegram.jpg` |
+  | CeceLove 1 | `https://cecelove.famatchai226.workers.dev/assets/hero%20caroussel/0.png` |
+  | Pack Baltazar | `https://balta.famatchai226.workers.dev/assets/hero%20caroussel/0.jpeg` |
+
+  > 🖼️ Vignettes carrées (`.upsell-thumb` : `aspect-ratio: 1 / 1` + `object-fit: cover`) collées
+  > aux bords de la carte (`overflow: hidden` sur `.upsell-card`), en `loading="lazy"` puisque la
+  > section est en bas de page. `check-links.js` exige **6 visuels** (mosaïque 4 + 1 + 1), chacun
+  > avec `alt` et en URL absolue ; `prod-check.js` vérifie qu'ils répondent bien en ligne.
 
   Contrôle automatique des deux familles de liens + cohérence FR/EN :
   `node _tools/check-links.js` (doit finir par `RESULT: ALL CHECKS PASSED`).
